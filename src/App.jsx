@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import History from './pages/History'
+import Calendar from './pages/Calendar'
 import AdminPanel from './components/AdminPanel'
 
 export default function App() {
@@ -13,40 +14,11 @@ export default function App() {
       <AuthProvider>
         <ThemeProvider>
           <Routes>
-            {/* Public */}
             <Route path="/login" element={<Login />} />
-
-            {/* Protected — any authenticated user */}
-            <Route
-              path="/app"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Protected — history */}
-            <Route
-              path="/history"
-              element={
-                <ProtectedRoute>
-                  <History />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Protected — admin only */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AdminPanel />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Fallback */}
+            <Route path="/app" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/app" replace />} />
           </Routes>
         </ThemeProvider>

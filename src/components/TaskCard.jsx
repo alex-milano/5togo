@@ -8,12 +8,22 @@ const BCK_LBL = { progress: '← Back', touchdown: '← Undo' }
 
 const STARS = { 1: '⭐', 2: '⭐⭐', 3: '⭐⭐⭐' }
 
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+function shortDateLabel(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00')
+  return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`
+}
+
 export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEnd, isDragging }) {
-  const isOld = task.dateStr && task.dateStr !== todayStr()
+  const today    = todayStr()
+  const isOld    = task.dateStr && task.dateStr < today
+  const isFuture = task.dateStr && task.dateStr > today
 
   let classes = `task-card m-${task.mode} s-${task.status}`
   if (isDragging) classes += ' is-dragging'
   if (isOld)     classes += ' old-task'
+  if (isFuture)  classes += ' future-task'
 
   const tags = Array.isArray(task.tags) ? task.tags.filter(Boolean) : []
 
@@ -29,6 +39,11 @@ export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEn
       }}
       onDragEnd={onDragEnd}
     >
+      {/* Future date badge */}
+      {isFuture && (
+        <div className="task-future-badge">📅 {shortDateLabel(task.dateStr)}</div>
+      )}
+
       {/* Title */}
       <div className="task-title">{task.text}</div>
 
@@ -56,7 +71,6 @@ export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEn
           {task.mode === 'worker' ? 'WORKER' : 'LIFE'}
         </span>
 
-        {/* Stars — Worker tasks only */}
         {task.mode === 'worker' && task.difficulty && (
           <span className="task-stars" title={`Difficulty ${task.difficulty}`}>
             {STARS[task.difficulty] || '⭐'}

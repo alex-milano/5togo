@@ -14,37 +14,49 @@ export default function History() {
   const [weekOffset, setWeekOffset]   = useState(0)
   const [activeTab,  setActiveTab]    = useState('work') // 'work' | 'life'
   const [tasks,      setTasks]        = useState([])
+  const [restDays,   setRestDays]     = useState({})   // dateStr → reason
   const [loading,    setLoading]      = useState(true)
 
   const weekDates = getWeekDates(weekOffset)
 
-  // Load all tasks for the visible week
+  // Load all tasks + rest days for the visible week
   useEffect(() => {
     if (!currentUser) return
     setLoading(true)
-    const q = query(
+    const tQuery = query(
       collection(db, 'tasks'),
       where('userId', '==', currentUser.uid),
       where('dateStr', '>=', weekDates[0]),
       where('dateStr', '<=', weekDates[6]),
     )
-    getDocs(q).then(snap => {
-      setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    const rQuery = query(
+      collection(db, 'restDays'),
+      where('userId', '==', currentUser.uid),
+      where('date', '>=', weekDates[0]),
+      where('date', '<=', weekDates[6]),
+    )
+    Promise.all([getDocs(tQuery), getDocs(rQuery)]).then(([tSnap, rSnap]) => {
+      setTasks(tSnap.docs.map(d => ({ id: d.id, ...d.data() })))
+      const rd = {}
+      rSnap.docs.forEach(d => { rd[d.data().date] = d.data().reason || 'Rest' })
+      setRestDays(rd)
       setLoading(false)
     })
   }, [currentUser, weekDates[0]])
 
   // ── Derived per-day data ───────────────────────────────────────────────────
   const dayRows = weekDates.map(dateStr => {
-    const dayTasks     = tasks.filter(t => t.dateStr === dateStr)
-    const workerDone   = dayTasks.filter(t => t.mode === 'worker' && t.status === 'touchdown')
-    const workerTotal  = dayTasks.filter(t => t.mode === 'worker')
-    const lifeDone     = dayTasks.filter(t => t.mode === 'life'   && t.status === 'touchdown')
-    const lifeTotal    = dayTasks.filter(t => t.mode === 'life')
-    const pts          = calcPoints(workerDone)
-    const level        = getScoreLevel(pts)
-    const balance      = getBalanceStatus(workerTotal.length, lifeTotal.length)
-    return { dateStr, workerDone, workerTotal, lifeDone, lifeTotal, pts, level, balance }
+    const isRest      = Boolean(restDays[dateStr])
+    const restReason  = restDays[dateStr] || null
+    const dayTasks    = tasks.filter(t => t.dateStr === dateStr)
+    const workerDone  = dayTasks.filter(t => t.mode === 'worker' && t.status === 'touchdown')
+    const workerTotal = dayTasks.filter(t => t.mode === 'worker')
+    const lifeDone    = dayTasks.filter(t => t.mode === 'life'   && t.status === 'touchdown')
+    const lifeTotal   = dayTasks.filter(t => t.mode === 'life')
+    const pts         = isRest ? 0 : calcPoints(workerDone)
+    const level       = getScoreLevel(pts)
+    const balance     = getBalanceStatus(workerTotal.length, lifeTotal.length)
+    return { dateStr, workerDone, workerTotal, lifeDone, lifeTotal, pts, level, balance, isRest, restReason }
   })
 
   // ── Weekly totals ──────────────────────────────────────────────────────────
@@ -136,33 +148,38 @@ function WorkTab({ dayRows }) {
 
   return (
     <div className="history-tab-content">
-      {dayRows.map(({ dateStr, pts, level, workerDone, workerTotal }) => (
-        <div key={dateStr} className="day-row">
+      {dayRows.map(({ dateStr, pts, level, workerDone, workerTotal, isRest, restReason }) => (
+        <div key={dateStr} className={`day-row ${isRest ? 'day-row-rest' : ''}`}>
           <div className="day-row-left">
             <span className="day-label">{shortDayLabel(dateStr)}</span>
-            <span className={`day-level-badge ${level.cls}`}>{level.icon} {level.label}</span>
+            {isRest
+              ? <span className="day-level-badge rest-badge">🌿 Rest Day{restReason ? ` — ${restReason}` : ''}</span>
+              : <span className={`day-level-badge ${level.cls}`}>{level.icon} {level.label}</span>
+            }
           </div>
 
-          <div className="day-bar-wrap">
-            <div className="day-bar-track">
-              <div
-                className={`day-bar-fill ${level.cls}`}
-                style={{ width: `${Math.min((pts / maxPts) * 100, 100)}%` }}
-              />
-              {/* 10pt target line */}
-              <div className="day-bar-target" style={{ left: `${(10 / maxPts) * 100}%` }} />
+          {!isRest && (
+            <div className="day-bar-wrap">
+              <div className="day-bar-track">
+                <div
+                  className={`day-bar-fill ${level.cls}`}
+                  style={{ width: `${Math.min((pts / maxPts) * 100, 100)}%` }}
+                />
+                <div className="day-bar-target" style={{ left: `${(10 / maxPts) * 100}%` }} />
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="day-row-right">
-            <span className="day-pts">{pts}<span className="day-pts-label">pts</span></span>
-            <span className="day-tasks-done">
-              {workerDone.length}/{workerTotal.length} done
-            </span>
-          </div>
+          {!isRest && (
+            <div className="day-row-right">
+              <span className="day-pts">{pts}<span className="day-pts-label">pts</span></span>
+              <span className="day-tasks-done">
+                {workerDone.length}/{workerTotal.length} done
+              </span>
+            </div>
+          )}
 
-          {/* Completed tasks */}
-          {workerDone.length > 0 && (
+          {!isRest && workerDone.length > 0 && (
             <div className="day-task-list">
               {workerDone.map(t => (
                 <span key={t.id} className="day-task-chip">

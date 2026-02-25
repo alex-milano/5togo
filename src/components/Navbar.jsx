@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { LogOut, Settings as SettingsIcon, Shield, BarChart2 } from 'lucide-react'
+import { LogOut, Settings as SettingsIcon, Shield, BarChart2, CalendarDays } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getScoreLevel, ZONES } from '../utils/balanceUtils'
 import ThemeToggle from './ThemeToggle'
@@ -15,7 +15,6 @@ export default function Navbar({ todayPoints = 0, streak = 0, zone = 'empty', on
 
   return (
     <nav className="navbar">
-      {/* Logo */}
       <div className="navbar-left">
         <Link to="/app" className="nav-logo">
           5<span className="nav-logo-accent">to</span>Go
@@ -23,7 +22,6 @@ export default function Navbar({ todayPoints = 0, streak = 0, zone = 'empty', on
         <span className="nav-tagline">5 YARDS TO TOUCHDOWN</span>
       </div>
 
-      {/* Score + Zone + Streak */}
       <div className="navbar-center">
         <div className="nav-score">
           <span className="nav-score-label">TODAY</span>
@@ -44,9 +42,11 @@ export default function Navbar({ todayPoints = 0, streak = 0, zone = 'empty', on
         )}
       </div>
 
-      {/* Actions */}
       <div className="navbar-right">
         <ThemeToggle />
+        <Link to="/calendar" className="nav-btn">
+          <CalendarDays size={14} /> Calendar
+        </Link>
         <Link to="/history" className="nav-btn">
           <BarChart2 size={14} /> History
         </Link>
