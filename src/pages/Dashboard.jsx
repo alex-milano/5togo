@@ -395,6 +395,7 @@ export default function Dashboard() {
               currentUser={currentUser}
               userProfile={userProfile}
               onShare={handleShare}
+              splitMode={viewMode === 'split'}
             />
           </div>
         )}
@@ -414,6 +415,7 @@ export default function Dashboard() {
               currentUser={currentUser}
               userProfile={userProfile}
               onShare={handleShare}
+              splitMode={viewMode === 'split'}
             />
           </div>
         )}

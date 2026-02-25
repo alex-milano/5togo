@@ -3240,7 +3240,7 @@ body {
    PHASE 2.3B — SHARED TASKS + 4-COLUMN LAYOUT
    ===================================================== */
 
-/* ── Board Layout: 4-column grid ── */
+/* ── Board Layout: 4-column grid (single mode) ── */
 .board-cols {
   display: grid;
   grid-template-columns: repeat(4, minmax(210px, 1fr));
@@ -3262,16 +3262,46 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Split mode: Worker 50% | Life 50% ── */
+/* ── Split mode: Worker 50% | Life 50% with 2x2 layout each ── */
 .dual-board.split-mode {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 24px;
 }
 
 .dual-board.split-mode .worker-panel,
 .dual-board.split-mode .life-panel {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Split mode: Each side has its own board structure with 2x2 grid */
+.dual-board.split-mode .worker-side,
+.dual-board.split-mode .life-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Top 2 columns (Locked+Zone or To Do+Doing) */
+.dual-board.split-mode .board-cols-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Bottom 2 columns (Touchdown+Ice or Done+Ice) */
+.dual-board.split-mode .board-cols-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Split mode column height adjustment */
+.dual-board.split-mode .column {
+  height: calc((100vh - 500px) / 2);
+  min-height: 240px;
 }
 
 /* ── Shared task badge ── */
@@ -3592,27 +3622,51 @@ body {
   flex-shrink: 0;
 }
 
-/* ── Mobile: Horizontal scroll carousel for 4-column boards ── */
-@media (max-width: 768px) {
+/* ── Mobile: Vertical stack (breakpoint 1024px) ── */
+@media (max-width: 1024px) {
+  /* Single mode: vertical stack */
   .board-cols {
     display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    gap: 10px;
-    padding-bottom: 8px;
-    -webkit-overflow-scrolling: touch;
+    flex-direction: column;
+    gap: 12px;
+    overflow-x: hidden;
   }
-  .board-cols .column {
-    flex: 0 0 82vw;
-    scroll-snap-align: start;
-    height: calc(100vh - 400px);
+  .column {
+    height: auto;
+    min-height: 320px;
+    max-height: 500px;
   }
+
+  /* Split mode: stack both sides vertically */
   .dual-board.split-mode {
     display: block;
+    gap: 24px;
   }
   .dual-board.split-mode .worker-panel,
   .dual-board.split-mode .life-panel {
     width: 100%;
+    margin-bottom: 24px;
+  }
+
+  /* Flatten 2x2 grids to vertical stacks on mobile */
+  .dual-board.split-mode .board-cols-top,
+  .dual-board.split-mode .board-cols-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dual-board.split-mode .column {
+    height: auto;
+    min-height: 320px;
+  }
+}
+
+/* ── Extra small mobile: even more compact ── */
+@media (max-width: 768px) {
+  .column {
+    min-height: 280px;
+    max-height: 450px;
   }
 }
 

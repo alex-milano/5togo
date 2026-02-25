@@ -23,6 +23,7 @@ export default function WorkerBoard({
   currentUser,
   userProfile,
   onShare,
+  splitMode,           // true in split mode (renders 2x2)
 }) {
   const { themeData } = useTheme()
   const cols = themeData.worker
@@ -145,34 +146,84 @@ export default function WorkerBoard({
       )}
 
       {/* ── Columns ── */}
-      <div className="board-cols">
-        {(['locked', 'progress', 'touchdown']).map(status => {
-          const c = cols[status]
-          return (
+      {!splitMode ? (
+        // Normal mode: 4 columns in single row
+        <div className="board-cols">
+          {(['locked', 'progress', 'touchdown']).map(status => {
+            const c = cols[status]
+            return (
+              <KanbanColumn
+                key={status}
+                title={c.name} subtitle={c.sub} icon={c.icon}
+                status={status}
+                colorClass={`col-${status}`}
+                tasks={visible.filter(t => t.status === status)}
+                onMove={onMove} onDelete={onDelete}
+                draggingId={draggingId}
+                onDragStart={onDragStart} onDragEnd={onDragEnd}
+                currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+              />
+            )
+          })}
+          {/* 4th column: Ice */}
+          <KanbanColumn
+            title={ice.name} subtitle={ice.sub} icon={ice.icon}
+            status="ice" colorClass="col-ice"
+            tasks={tagFilter ? iceTasks.filter(t => (t.tags || []).includes(tagFilter)) : iceTasks}
+            onMove={onMove} onDelete={onDelete}
+            draggingId={draggingId}
+            onDragStart={onDragStart} onDragEnd={onDragEnd}
+            currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+          />
+        </div>
+      ) : (
+        // Split mode: 2x2 grid (locked+progress top, touchdown+ice bottom)
+        <>
+          <div className="board-cols-top">
             <KanbanColumn
-              key={status}
-              title={c.name} subtitle={c.sub} icon={c.icon}
-              status={status}
-              colorClass={`col-${status}`}
-              tasks={visible.filter(t => t.status === status)}
+              title={cols.locked.name} subtitle={cols.locked.sub} icon={cols.locked.icon}
+              status="locked"
+              colorClass="col-locked"
+              tasks={visible.filter(t => t.status === 'locked')}
               onMove={onMove} onDelete={onDelete}
               draggingId={draggingId}
               onDragStart={onDragStart} onDragEnd={onDragEnd}
               currentUser={currentUser} userProfile={userProfile} onShare={onShare}
             />
-          )
-        })}
-        {/* 4th column: Ice */}
-        <KanbanColumn
-          title={ice.name} subtitle={ice.sub} icon={ice.icon}
-          status="ice" colorClass="col-ice"
-          tasks={tagFilter ? iceTasks.filter(t => (t.tags || []).includes(tagFilter)) : iceTasks}
-          onMove={onMove} onDelete={onDelete}
-          draggingId={draggingId}
-          onDragStart={onDragStart} onDragEnd={onDragEnd}
-          currentUser={currentUser} userProfile={userProfile} onShare={onShare}
-        />
-      </div>
+            <KanbanColumn
+              title={cols.progress.name} subtitle={cols.progress.sub} icon={cols.progress.icon}
+              status="progress"
+              colorClass="col-progress"
+              tasks={visible.filter(t => t.status === 'progress')}
+              onMove={onMove} onDelete={onDelete}
+              draggingId={draggingId}
+              onDragStart={onDragStart} onDragEnd={onDragEnd}
+              currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+            />
+          </div>
+          <div className="board-cols-bottom">
+            <KanbanColumn
+              title={cols.touchdown.name} subtitle={cols.touchdown.sub} icon={cols.touchdown.icon}
+              status="touchdown"
+              colorClass="col-touchdown"
+              tasks={visible.filter(t => t.status === 'touchdown')}
+              onMove={onMove} onDelete={onDelete}
+              draggingId={draggingId}
+              onDragStart={onDragStart} onDragEnd={onDragEnd}
+              currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+            />
+            <KanbanColumn
+              title={ice.name} subtitle={ice.sub} icon={ice.icon}
+              status="ice" colorClass="col-ice"
+              tasks={tagFilter ? iceTasks.filter(t => (t.tags || []).includes(tagFilter)) : iceTasks}
+              onMove={onMove} onDelete={onDelete}
+              draggingId={draggingId}
+              onDragStart={onDragStart} onDragEnd={onDragEnd}
+              currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+            />
+          </div>
+        </>
+      )}
 
       {/* ── Burnout modal ── */}
       {showBurnout && (
