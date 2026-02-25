@@ -13,8 +13,12 @@ import LifeBoard from '../components/LifeBoard'
 import KanbanColumn from '../components/KanbanColumn'
 import Settings from '../components/Settings'
 import Confetti from '../components/Confetti'
+import ViewSelector from '../components/ViewSelector'
+import DailyMotivation from '../components/DailyMotivation'
 import { todayStr, yesterdayStr, getWeekNumber, getDateNDaysAgo } from '../utils/dateUtils'
 import { calcPoints, getScoreLevel, getZone } from '../utils/balanceUtils'
+
+const VIEW_KEY = '5togo_viewMode'
 
 export default function Dashboard() {
   const { currentUser } = useAuth()
@@ -28,11 +32,20 @@ export default function Dashboard() {
   const [showConfetti,  setShowConfetti]  = useState(false)
   const [showRecovery,  setShowRecovery]  = useState(false)
   const [mobileView,    setMobileView]    = useState('worker') // 'worker' | 'life'
+  const [viewMode,      setViewMode]      = useState(              // 'split' | 'worker' | 'life'
+    () => localStorage.getItem(VIEW_KEY) || 'split'
+  )
   const [draggingId,    setDraggingId]    = useState(null)
   const peakShownRef   = useRef(null)
-  const frozenRef      = useRef(false)  // prevent double-freeze runs
+  const frozenRef      = useRef(false)
 
   const today = todayStr()
+
+  // Persist viewMode to localStorage
+  function handleViewMode(mode) {
+    setViewMode(mode)
+    localStorage.setItem(VIEW_KEY, mode)
+  }
 
   // ── Firestore listener ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -120,7 +133,7 @@ export default function Dashboard() {
     setStreak(newStreak)
   }
 
-  // ── Burnout tracking (record zone, check 3-day streak) ────────────────────
+  // ── Burnout tracking ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!currentUser || zone === 'empty' || zone === 'green') return
 
@@ -132,7 +145,6 @@ export default function Dashboard() {
 
     if (zone !== 'red') return
 
-    // Check if 3 consecutive red-zone days
     Promise.all([
       getDoc(doc(db, 'burnoutTracking', `${currentUser.uid}_${getDateNDaysAgo(1)}`)),
       getDoc(doc(db, 'burnoutTracking', `${currentUser.uid}_${getDateNDaysAgo(2)}`)),
@@ -168,7 +180,6 @@ export default function Dashboard() {
     const updates = { status: newStatus }
     if (newStatus === 'touchdown') {
       updates.completedAt = serverTimestamp()
-      // Unfreezing old task → pull into today
       if (task.status === 'ice' && task.dateStr !== today) updates.dateStr = today
     } else {
       updates.completedAt = null
@@ -197,6 +208,11 @@ export default function Dashboard() {
 
   const ice = themeData.ice || { name: 'Ice Bucket', sub: 'Frozen', icon: '🧊' }
 
+  // ── Panel visibility helpers ───────────────────────────────────────────────
+  const showWorker = viewMode === 'split' || viewMode === 'worker'
+  const showLife   = viewMode === 'split' || viewMode === 'life'
+  const showDivider = viewMode === 'split'
+
   return (
     <div className="app-layout">
       <Navbar
@@ -205,6 +221,12 @@ export default function Dashboard() {
         zone={zone}
         onOpenSettings={() => setShowSettings(true)}
       />
+
+      {/* ── Daily motivation ── */}
+      <DailyMotivation />
+
+      {/* ── View selector (desktop) ── */}
+      <ViewSelector viewMode={viewMode} onChange={handleViewMode} />
 
       {/* ── Mobile toggle ── */}
       <div className="mobile-toggle">
@@ -229,35 +251,39 @@ export default function Dashboard() {
 
       {/* ── Dual board ── */}
       <div className="dual-board">
-        <div className={`worker-panel ${mobileView === 'worker' ? 'mobile-visible' : 'mobile-hidden'}`}>
-          <WorkerBoard
-            tasks={workerTasks}
-            activeWorkerCount={activeWorkerCount}
-            todayPoints={todayPoints}
-            streak={streak}
-            draggingId={draggingId}
-            onMove={handleMove}
-            onDelete={handleDelete}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onAddTask={handleAddTask}
-          />
-        </div>
+        {showWorker && (
+          <div className={`worker-panel ${mobileView === 'worker' ? 'mobile-visible' : 'mobile-hidden'}`}>
+            <WorkerBoard
+              tasks={workerTasks}
+              activeWorkerCount={activeWorkerCount}
+              todayPoints={todayPoints}
+              streak={streak}
+              draggingId={draggingId}
+              onMove={handleMove}
+              onDelete={handleDelete}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onAddTask={handleAddTask}
+            />
+          </div>
+        )}
 
-        <div className="board-divider" />
+        {showDivider && <div className="board-divider" />}
 
-        <div className={`life-panel ${mobileView === 'life' ? 'mobile-visible' : 'mobile-hidden'}`}>
-          <LifeBoard
-            tasks={lifeTasks}
-            completedToday={todayLife.length}
-            draggingId={draggingId}
-            onMove={handleMove}
-            onDelete={handleDelete}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onAddTask={handleAddTask}
-          />
-        </div>
+        {showLife && (
+          <div className={`life-panel ${mobileView === 'life' ? 'mobile-visible' : 'mobile-hidden'}`}>
+            <LifeBoard
+              tasks={lifeTasks}
+              completedToday={todayLife.length}
+              draggingId={draggingId}
+              onMove={handleMove}
+              onDelete={handleDelete}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onAddTask={handleAddTask}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── Ice Bucket ── */}

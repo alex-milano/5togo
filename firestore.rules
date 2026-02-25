@@ -2,19 +2,41 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ── Helper: check if requester is admin ──────────────────────────────────
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ── Users ────────────────────────────────────────────────────────────────
     match /users/{userId} {
       allow read: if request.auth != null;
       allow write: if request.auth.uid == userId;
     }
 
+    // ── Tasks ────────────────────────────────────────────────────────────────
     match /tasks/{taskId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read:          if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create:        if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
+    // ── User settings ────────────────────────────────────────────────────────
     match /userSettings/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── Burnout tracking ─────────────────────────────────────────────────────
+    match /burnoutTracking/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── Motivational messages ─────────────────────────────────────────────────
+    // All authenticated users can read (for daily message display)
+    // Only admins can create / update / delete
+    match /motivationalMessages/{msgId} {
+      allow read:          if request.auth != null;
+      allow create, update, delete: if isAdmin();
     }
 
   }

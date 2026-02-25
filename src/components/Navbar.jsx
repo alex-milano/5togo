@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { LogOut, Settings as SettingsIcon, Shield, BarChart2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getScoreLevel, ZONES } from '../utils/balanceUtils'
+import ThemeToggle from './ThemeToggle'
 
 export default function Navbar({ todayPoints = 0, streak = 0, zone = 'empty', onOpenSettings }) {
   const { currentUser, userRole, logout } = useAuth()
@@ -45,6 +46,7 @@ export default function Navbar({ todayPoints = 0, streak = 0, zone = 'empty', on
 
       {/* Actions */}
       <div className="navbar-right">
+        <ThemeToggle />
         <Link to="/history" className="nav-btn">
           <BarChart2 size={14} /> History
         </Link>

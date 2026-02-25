@@ -1843,3 +1843,407 @@ body {
   .day-row-left { min-width: 130px; }
   .baf-row1, .baf-row2 { flex-direction: column; align-items: stretch; }
 }
+
+/* =====================================================
+   PHASE 2.1 — LIGHT MODE TRANSITION
+   ===================================================== */
+/* Smooth transition when toggling light/dark */
+html {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+body {
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Light mode body background */
+[data-light="true"] body {
+  background: linear-gradient(160deg, var(--bg) 0%, var(--bg2) 50%, var(--bg3) 100%);
+}
+
+/* Light mode navbar */
+[data-light="true"] .navbar {
+  background: var(--navbar-bg, rgba(244,246,251,0.92));
+  border-bottom-color: var(--border);
+}
+
+/* Light mode cards, columns, etc. use CSS vars — no extra rules needed  */
+/* The getLightVars() injection replaces --card, --bg, --text, etc. directly */
+
+/* =====================================================
+   PHASE 2.1 — THEME TOGGLE BUTTON
+   ===================================================== */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 7px 13px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.theme-toggle-btn:hover {
+  background: rgba(255,255,255,0.09);
+  color: var(--text);
+  border-color: var(--orange);
+}
+.theme-toggle-icon { font-size: 0.9rem; line-height: 1; }
+.theme-toggle-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.3px; }
+
+[data-light="true"] .theme-toggle-btn {
+  background: rgba(0,0,0,0.04);
+  border-color: var(--border2);
+  color: var(--text2);
+}
+[data-light="true"] .theme-toggle-btn:hover {
+  background: rgba(0,0,0,0.07);
+  color: var(--text);
+}
+
+/* =====================================================
+   PHASE 2.1 — VIEW SELECTOR
+   ===================================================== */
+.view-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 4px;
+  margin: 8px 20px 0;
+  width: fit-content;
+}
+
+.vs-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+.vs-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+.vs-btn.vs-active {
+  background: rgba(255,107,53,0.14);
+  border-color: rgba(255,107,53,0.35);
+  color: var(--orange);
+  font-weight: 700;
+}
+.vs-icon { font-size: 0.85rem; }
+.vs-label { letter-spacing: 0.3px; }
+
+/* Hide view selector on mobile (uses mt-btn instead) */
+@media (max-width: 768px) {
+  .view-selector { display: none; }
+}
+
+/* ── Panel visibility driven by viewMode ── */
+.worker-panel.panel-hidden,
+.life-panel.panel-hidden { display: none !important; }
+
+.worker-panel.panel-full,
+.life-panel.panel-full {
+  flex: 1;
+  max-width: 100%;
+}
+
+/* =====================================================
+   PHASE 2.1 — DAILY MOTIVATION
+   ===================================================== */
+.daily-motivation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--orange);
+  border-radius: var(--radius);
+  margin: 10px 20px 0;
+  padding: 12px 18px;
+  animation: fadein 0.4s ease;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.dm-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.dm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dm-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.dm-author {
+  font-size: 0.7rem;
+  color: var(--text2);
+  font-weight: 500;
+}
+
+/* =====================================================
+   PHASE 2.1 — ADMIN MESSAGES SECTION
+   ===================================================== */
+.admin-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 32px 0 16px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.admin-section-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-section-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text3);
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 2px 9px;
+}
+
+.msg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.msg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  transition: border-color 0.15s;
+}
+.msg-row:hover { border-color: var(--border2); }
+.msg-row.msg-inactive { opacity: 0.45; }
+
+.msg-body {
+  flex: 1;
+  min-width: 0;
+}
+.msg-text {
+  font-size: 0.83rem;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+.msg-author {
+  font-size: 0.7rem;
+  color: var(--text3);
+}
+
+.msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Toggle active pill */
+.msg-active-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.msg-active-badge.is-active {
+  background: rgba(45,198,83,0.14);
+  border-color: rgba(45,198,83,0.3);
+  color: var(--green);
+}
+.msg-active-badge.is-inactive {
+  background: rgba(90,99,117,0.14);
+  border-color: var(--border2);
+  color: var(--text3);
+}
+.msg-active-badge:hover { filter: brightness(1.15); }
+
+/* Edit / Delete small buttons */
+.msg-icon-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  transition: all 0.14s;
+  white-space: nowrap;
+}
+.msg-icon-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+.msg-icon-btn.delete-btn { border-color: rgba(230,57,70,0.25); color: #ff6b76; }
+.msg-icon-btn.delete-btn:hover { background: rgba(230,57,70,0.1); }
+
+/* Msg form */
+.msg-form {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadein 0.2s ease;
+}
+.msg-form-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 0.3px;
+}
+.msg-textarea {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  padding: 10px 14px;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.msg-textarea::placeholder { color: var(--text3); }
+.msg-textarea:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
+.msg-char-count {
+  font-size: 0.68rem;
+  color: var(--text3);
+  text-align: right;
+  margin-top: -6px;
+}
+.msg-char-count.over-limit { color: var(--red); }
+
+.msg-author-input {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.msg-author-input::placeholder { color: var(--text3); }
+.msg-author-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(76,201,240,0.1); }
+
+.msg-form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.msg-form-active-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: var(--text2);
+  cursor: pointer;
+  user-select: none;
+}
+.msg-form-active-label input[type="checkbox"] {
+  accent-color: var(--orange);
+  width: 15px;
+  height: 15px;
+}
+.msg-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.msg-save-btn {
+  background: linear-gradient(135deg, var(--orange), var(--red));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.msg-save-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.msg-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.msg-cancel-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  transition: all 0.14s;
+}
+.msg-cancel-btn:hover { background: rgba(255,255,255,0.08); }
+
+/* Seed button */
+.msg-seed-btn {
+  background: rgba(76,201,240,0.1);
+  border: 1px solid rgba(76,201,240,0.25);
+  border-radius: var(--radius-sm);
+  color: var(--blue);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  transition: all 0.15s;
+}
+.msg-seed-btn:hover { background: rgba(76,201,240,0.18); }
+.msg-seed-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
