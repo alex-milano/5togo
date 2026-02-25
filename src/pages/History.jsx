@@ -61,7 +61,7 @@ export default function History() {
 
   // ── Weekly totals ──────────────────────────────────────────────────────────
   const weekPts       = dayRows.reduce((s, d) => s + d.pts, 0)
-  const peakDays      = dayRows.filter(d => d.pts >= 10).length
+  const peakDays      = dayRows.filter(d => d.pts >= 5).length
   const totalWorker   = dayRows.reduce((s, d) => s + d.workerDone.length, 0)
   const totalLife     = dayRows.reduce((s, d) => s + d.lifeDone.length, 0)
   const weekLevel     = getScoreLevel(Math.round(weekPts / 7))
@@ -144,7 +144,7 @@ export default function History() {
 
 // ── Work History tab ──────────────────────────────────────────────────────────
 function WorkTab({ dayRows }) {
-  const maxPts = Math.max(...dayRows.map(d => d.pts), 10)
+  const maxPts = Math.max(...dayRows.map(d => d.pts), 5)
 
   return (
     <div className="history-tab-content">
@@ -165,7 +165,7 @@ function WorkTab({ dayRows }) {
                   className={`day-bar-fill ${level.cls}`}
                   style={{ width: `${Math.min((pts / maxPts) * 100, 100)}%` }}
                 />
-                <div className="day-bar-target" style={{ left: `${(10 / maxPts) * 100}%` }} />
+                <div className="day-bar-target" style={{ left: `${(5 / maxPts) * 100}%` }} />
               </div>
             </div>
           )}

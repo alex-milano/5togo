@@ -21,9 +21,9 @@ import { todayStr, getWeekNumber } from '../utils/dateUtils'
 
 // ─── Calendar Legend ──────────────────────────────────────────────────────────
 const LEGEND = [
-  { cls: 'ds-peak',    icon: '🔥', label: 'Peak Day (10+ pts)' },
-  { cls: 'ds-solid',   icon: '💪', label: 'Solid (7-9 pts)'    },
-  { cls: 'ds-good',    icon: '👍', label: 'Good (4-6 pts)'     },
+  { cls: 'ds-peak',    icon: '🔥', label: 'Peak Day (5+ pts)' },
+  { cls: 'ds-solid',   icon: '💪', label: 'Solid (4 pts)'    },
+  { cls: 'ds-good',    icon: '👍', label: 'Good (2-3 pts)'     },
   { cls: 'ds-off',     icon: '😴', label: 'Off Day'            },
   { cls: 'ds-rest',    icon: '🌿', label: 'Rest Day'           },
   { cls: 'ds-planned', icon: '📅', label: 'Tasks Scheduled'    },

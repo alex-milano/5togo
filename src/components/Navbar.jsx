@@ -28,7 +28,7 @@ export default function Navbar({ todayPoints = 0, streak = 0, zone = 'empty', on
         <div className="nav-score">
           <span className="nav-score-label">TODAY</span>
           <span className={`nav-score-value ${level.cls}`}>{todayPoints}</span>
-          <span className="nav-score-sep">/10 pts</span>
+          <span className="nav-score-sep">/5 pts</span>
           <div className="nav-score-divider" />
           <span className={`nav-score-status ${level.cls}`}>{level.icon} {level.label}</span>
         </div>

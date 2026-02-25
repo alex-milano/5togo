@@ -38,7 +38,7 @@ export default function WorkerBoard({
 
   const zone  = getZone(activeWorkerCount)
   const level = getScoreLevel(todayPoints)
-  const pct   = Math.min((todayPoints / 10) * 100, 100)
+  const pct   = Math.min((todayPoints / 5) * 100, 100)
 
   // Unique tags from all worker tasks
   const allTags = useMemo(() => {
@@ -95,7 +95,7 @@ export default function WorkerBoard({
         {/* Score bar */}
         <div className="bh-score">
           <div className="bh-score-row">
-            <span className={`bh-pts ${level.cls}`}>{todayPoints}<span className="bh-pts-max">/10 pts</span></span>
+            <span className={`bh-pts ${level.cls}`}>{todayPoints}<span className="bh-pts-max">/5 pts</span></span>
             <span className={`bh-level-badge ${level.cls}`}>{level.icon} {level.label}</span>
             {streak > 0 && <span className="bh-streak">🔥 {streak}d</span>}
           </div>

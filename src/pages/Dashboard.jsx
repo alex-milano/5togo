@@ -149,7 +149,7 @@ export default function Dashboard() {
 
   // ── Watch for PEAK DAY ─────────────────────────────────────────────────────
   useEffect(() => {
-    if (todayPoints >= 10 && peakShownRef.current !== today) {
+    if (todayPoints >= 5 && peakShownRef.current !== today) {
       peakShownRef.current = today
       handleStreak()
       setShowPeakModal(true)
@@ -435,7 +435,7 @@ export default function Dashboard() {
         <div className="modal-box" onClick={e => e.stopPropagation()}>
           <span className="modal-trophy">🏆</span>
           <h2 className="modal-title">PEAK DAY!</h2>
-          <p className="modal-sub">10+ points earned. You're on fire.</p>
+          <p className="modal-sub">5+ points earned. You're on fire.</p>
           <div className="modal-streak">🔥 {streak}-day streak!</div>
           <button className="modal-btn" onClick={() => setShowPeakModal(false)}>Keep Going! →</button>
         </div>

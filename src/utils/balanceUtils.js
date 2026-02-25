@@ -17,10 +17,10 @@ export function getZone(activeCount) {
 // ─── Points & scoring ─────────────────────────────────────────────────────────
 
 export const SCORE_LEVELS = [
-  { min: 15, label: 'OVERACHIEVER', icon: '🚀', cls: 'sc-over',  note: 'Remember to rest tomorrow 😊' },
-  { min: 10, label: 'PEAK DAY',     icon: '🔥', cls: 'sc-peak',  note: '' },
-  { min: 7,  label: 'SOLID DAY',    icon: '💪', cls: 'sc-solid', note: '' },
-  { min: 4,  label: 'GOOD EFFORT',  icon: '👍', cls: 'sc-good',  note: '' },
+  { min: 7,  label: 'OVERACHIEVER', icon: '🚀', cls: 'sc-over',  note: 'Remember to rest tomorrow 😊' },
+  { min: 5,  label: 'PEAK DAY',     icon: '🔥', cls: 'sc-peak',  note: '' },
+  { min: 4,  label: 'SOLID DAY',    icon: '💪', cls: 'sc-solid', note: '' },
+  { min: 2,  label: 'GOOD EFFORT',  icon: '👍', cls: 'sc-good',  note: '' },
   { min: 0,  label: 'OFF DAY',      icon: '😴', cls: 'sc-off',   note: '' },
 ]
 
