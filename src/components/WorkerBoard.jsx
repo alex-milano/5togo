@@ -23,6 +23,7 @@ export default function WorkerBoard({
   currentUser,
   userProfile,
   onShare,
+  onEdit,
   splitMode,           // true in split mode (renders 2x2)
 }) {
   const { themeData } = useTheme()
@@ -161,7 +162,7 @@ export default function WorkerBoard({
                 onMove={onMove} onDelete={onDelete}
                 draggingId={draggingId}
                 onDragStart={onDragStart} onDragEnd={onDragEnd}
-                currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+                currentUser={currentUser} userProfile={userProfile} onShare={onShare} onEdit={onEdit}
               />
             )
           })}
@@ -188,7 +189,7 @@ export default function WorkerBoard({
               onMove={onMove} onDelete={onDelete}
               draggingId={draggingId}
               onDragStart={onDragStart} onDragEnd={onDragEnd}
-              currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+              currentUser={currentUser} userProfile={userProfile} onShare={onShare} onEdit={onEdit}
             />
             <KanbanColumn
               title={cols.progress.name} subtitle={cols.progress.sub} icon={cols.progress.icon}
@@ -198,7 +199,7 @@ export default function WorkerBoard({
               onMove={onMove} onDelete={onDelete}
               draggingId={draggingId}
               onDragStart={onDragStart} onDragEnd={onDragEnd}
-              currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+              currentUser={currentUser} userProfile={userProfile} onShare={onShare} onEdit={onEdit}
             />
           </div>
           <div className="board-cols-bottom">
@@ -210,7 +211,7 @@ export default function WorkerBoard({
               onMove={onMove} onDelete={onDelete}
               draggingId={draggingId}
               onDragStart={onDragStart} onDragEnd={onDragEnd}
-              currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+              currentUser={currentUser} userProfile={userProfile} onShare={onShare} onEdit={onEdit}
             />
             <KanbanColumn
               title={ice.name} subtitle={ice.sub} icon={ice.icon}
@@ -219,7 +220,7 @@ export default function WorkerBoard({
               onMove={onMove} onDelete={onDelete}
               draggingId={draggingId}
               onDragStart={onDragStart} onDragEnd={onDragEnd}
-              currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+              currentUser={currentUser} userProfile={userProfile} onShare={onShare} onEdit={onEdit}
             />
           </div>
         </>

@@ -18,6 +18,7 @@ import DailyMotivation from '../components/DailyMotivation'
 import UpcomingTasksSection from '../components/UpcomingTasksSection'
 import ScheduleTaskModal from '../components/ScheduleTaskModal'
 import ShareTaskModal from '../components/ShareTaskModal'
+import EditTaskModal from '../components/EditTaskModal'
 import { todayStr, yesterdayStr, getWeekNumber, getDateNDaysAgo } from '../utils/dateUtils'
 import { calcPoints, getScoreLevel, getZone } from '../utils/balanceUtils'
 
@@ -42,6 +43,8 @@ export default function Dashboard() {
   )
   const [draggingId,  setDraggingId]  = useState(null)
   const [shareModalTask, setShareModalTask] = useState(null)
+  const [editingTask, setEditingTask] = useState(null)
+  const [savingEdit, setSavingEdit] = useState(false)
 
   // Rest day
   const [showRestModal,  setShowRestModal]  = useState(false)
@@ -261,6 +264,21 @@ export default function Dashboard() {
     await deleteDoc(doc(db, 'tasks', id))
   }, [])
 
+  // ── Edit task ────────────────────────────────────────────────────────────────
+  const handleEdit = useCallback((task) => {
+    setEditingTask(task)
+  }, [])
+
+  const handleEditSave = useCallback(async (taskId, updates) => {
+    setSavingEdit(true)
+    try {
+      await updateDoc(doc(db, 'tasks', taskId), updates)
+      setEditingTask(null)
+    } finally {
+      setSavingEdit(false)
+    }
+  }, [])
+
   // ── Drag ──────────────────────────────────────────────────────────────────
   const handleDragStart = useCallback(id => setDraggingId(id), [])
   const handleDragEnd   = useCallback(()  => setDraggingId(null), [])
@@ -304,6 +322,7 @@ export default function Dashboard() {
         setShowRestModal(false)
         setScheduleOpen(false)
         setShareModalTask(null)
+        setEditingTask(null)
       }
     }
     window.addEventListener('keydown', h)
@@ -395,6 +414,7 @@ export default function Dashboard() {
               currentUser={currentUser}
               userProfile={userProfile}
               onShare={handleShare}
+              onEdit={handleEdit}
               splitMode={viewMode === 'split'}
             />
           </div>
@@ -415,6 +435,7 @@ export default function Dashboard() {
               currentUser={currentUser}
               userProfile={userProfile}
               onShare={handleShare}
+              onEdit={handleEdit}
               splitMode={viewMode === 'split'}
             />
           </div>
@@ -489,6 +510,17 @@ export default function Dashboard() {
           currentUser={currentUser}
           userProfile={userProfile}
           onClose={() => setShareModalTask(null)}
+        />
+      )}
+
+      {/* ── Edit Task modal ── */}
+      {editingTask && (
+        <EditTaskModal
+          task={editingTask}
+          isOpen={!!editingTask}
+          onClose={() => setEditingTask(null)}
+          onSave={handleEditSave}
+          saving={savingEdit}
         />
       )}
 

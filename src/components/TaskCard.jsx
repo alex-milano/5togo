@@ -15,7 +15,7 @@ function shortDateLabel(dateStr) {
   return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`
 }
 
-export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEnd, isDragging, currentUser, userProfile, onShare }) {
+export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEnd, isDragging, currentUser, userProfile, onShare, onEdit }) {
   const today    = todayStr()
   const isOld    = task.dateStr && task.dateStr < today
   const isFuture = task.dateStr && task.dateStr > today
@@ -112,6 +112,9 @@ export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEn
           )}
           {canShare && onShare && (
             <button className="act share" onClick={() => onShare(task.id)}>🔗</button>
+          )}
+          {canEdit && onEdit && (
+            <button className="act edit" onClick={() => onEdit(task)}>✏️</button>
           )}
           {canDelete && (
             <button className="act del" onClick={() => onDelete(task.id)}>🗑</button>

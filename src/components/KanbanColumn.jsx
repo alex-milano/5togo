@@ -23,6 +23,7 @@ export default function KanbanColumn({
   currentUser,
   userProfile,
   onShare,
+  onEdit,
 }) {
   const [isDragOver, setIsDragOver] = useState(false)
   const hint = EMPTY[status] || { icon: '📋', text: 'Empty' }
@@ -81,6 +82,7 @@ export default function KanbanColumn({
               currentUser={currentUser}
               userProfile={userProfile}
               onShare={onShare}
+              onEdit={onEdit}
             />
           ))
         )}
