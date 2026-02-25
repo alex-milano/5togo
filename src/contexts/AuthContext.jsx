@@ -9,6 +9,8 @@ import {
   doc,
   setDoc,
   getDoc,
+  onSnapshot,
+  updateDoc,
   serverTimestamp,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase/firebaseConfig'
@@ -27,19 +29,24 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser]   = useState(null)
   const [userRole, setUserRole]         = useState(null)
+  const [userProfile, setUserProfile]   = useState(null)
   const [authLoading, setAuthLoading]   = useState(true)
 
   // ── Register ─────────────────────────────────────────────────────────
-  async function register(email, password) {
+  async function register(email, password, handle, displayName) {
     const cred = await createUserWithEmailAndPassword(auth, email, password)
     const role = email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'admin' : 'user'
+    const h = handle.trim().toLowerCase()
 
     // Create user document
     await setDoc(doc(db, 'users', cred.user.uid), {
-      uid:       cred.user.uid,
-      email:     email.toLowerCase(),
+      uid:         cred.user.uid,
+      email:       email.toLowerCase(),
       role,
-      createdAt: serverTimestamp(),
+      handle:      h,
+      displayName: displayName.trim(),
+      bio:         '',
+      createdAt:   serverTimestamp(),
     })
 
     // Create default settings document
@@ -76,6 +83,16 @@ export function AuthProvider({ children }) {
     return 'user'
   }
 
+  // ── Update user profile ────────────────────────────────────────────────
+  async function updateUserProfile(data) {
+    if (!currentUser) return
+    await updateDoc(doc(db, 'users', currentUser.uid), {
+      ...data,
+      updatedAt: serverTimestamp(),
+    })
+    // onSnapshot will auto-update userProfile state
+  }
+
   // ── Auth state listener ───────────────────────────────────────────────
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -85,19 +102,39 @@ export function AuthProvider({ children }) {
         setUserRole(role)
       } else {
         setUserRole(null)
+        setUserProfile(null)
       }
       setAuthLoading(false)
     })
     return unsub
   }, [])
 
+  // ── Live profile listener ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!currentUser) {
+      setUserProfile(null)
+      return
+    }
+    const unsub = onSnapshot(doc(db, 'users', currentUser.uid), snap => {
+      if (snap.exists()) setUserProfile({ id: snap.id, ...snap.data() })
+      else setUserProfile(null)
+    })
+    return unsub
+  }, [currentUser])
+
+  // Computed: true when user is logged in but has no handle (migration case)
+  const needsHandle = !!currentUser && !!userProfile && !userProfile.handle
+
   const value = {
     currentUser,
     userRole,
+    userProfile,
     authLoading,
+    needsHandle,
     register,
     login,
     logout,
+    updateUserProfile,
   }
 
   return (

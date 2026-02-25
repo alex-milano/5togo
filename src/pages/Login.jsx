@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { db } from '../firebase/firebaseConfig'
 import { useAuth } from '../contexts/AuthContext'
+import { validateHandleFormat, checkHandleAvailable } from '../utils/handleValidation'
 
 export default function Login() {
   const { login, register } = useAuth()
@@ -10,8 +12,39 @@ export default function Login() {
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
   const [confirm, setConfirm]       = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [handle, setHandle]         = useState('')
+  const [handleMsg, setHandleMsg]   = useState('')
+  const [handleOk, setHandleOk]     = useState(false)
   const [error, setError]           = useState('')
   const [loading, setLoading]       = useState(false)
+
+  // Debounced handle check — 500ms, only when isRegister
+  useEffect(() => {
+    if (!isRegister) return
+    setHandleOk(false)
+    const fmt = validateHandleFormat(handle)
+    if (handle.length === 0) {
+      setHandleMsg('')
+      return
+    }
+    if (fmt) {
+      setHandleMsg(fmt)
+      return
+    }
+    setHandleMsg('Checking…')
+    const t = setTimeout(async () => {
+      const available = await checkHandleAvailable(db, handle)
+      if (available) {
+        setHandleMsg('✓ Available')
+        setHandleOk(true)
+      } else {
+        setHandleMsg('Handle already taken.')
+        setHandleOk(false)
+      }
+    }, 500)
+    return () => clearTimeout(t)
+  }, [handle, isRegister])
 
   const title = isRegister ? 'Create your account' : 'Sign in to your account'
   const btnLabel = isRegister ? 'Create Account' : 'Sign In'
@@ -47,11 +80,19 @@ export default function Login() {
       setError('Password must be at least 6 characters.')
       return
     }
+    if (isRegister && !displayName.trim()) {
+      setError('Display name is required.')
+      return
+    }
+    if (isRegister && !handleOk) {
+      setError('Please choose a valid, available handle.')
+      return
+    }
 
     setLoading(true)
     try {
       if (isRegister) {
-        await register(email.trim(), password)
+        await register(email.trim(), password, handle.trim(), displayName.trim())
       } else {
         await login(email.trim(), password)
       }
@@ -68,6 +109,10 @@ export default function Login() {
     setError('')
     setPassword('')
     setConfirm('')
+    setHandle('')
+    setDisplayName('')
+    setHandleMsg('')
+    setHandleOk(false)
   }
 
   return (
@@ -125,6 +170,49 @@ export default function Login() {
                 autoComplete="new-password"
               />
             </div>
+          )}
+
+          {isRegister && (
+            <>
+              <div className="auth-field">
+                <label className="auth-label">Display Name</label>
+                <input
+                  className="auth-input"
+                  type="text"
+                  placeholder="Your full name or nickname"
+                  value={displayName}
+                  onChange={e => setDisplayName(e.target.value)}
+                  maxLength={40}
+                  required
+                  autoComplete="name"
+                />
+              </div>
+
+              <div className="auth-field">
+                <label className="auth-label">Handle</label>
+                <div className="handle-input-wrap">
+                  <span className="handle-at">@</span>
+                  <input
+                    className={`auth-input handle-input ${handleOk ? 'handle-ok' : ''}`}
+                    type="text"
+                    placeholder="your_handle"
+                    value={handle}
+                    onChange={e => setHandle(e.target.value.toLowerCase())}
+                    maxLength={20}
+                    required
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                  />
+                </div>
+                {handleMsg && (
+                  <span className={`handle-hint ${handleOk ? 'handle-hint-ok' : 'handle-hint-err'}`}>
+                    {handleMsg}
+                  </span>
+                )}
+              </div>
+            </>
           )}
 
           <button className="auth-submit" type="submit" disabled={loading}>
