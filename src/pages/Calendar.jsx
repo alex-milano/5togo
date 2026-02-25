@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   collection, query, where, getDocs,
-  addDoc, deleteDoc, doc, setDoc, serverTimestamp,
+  addDoc, deleteDoc, doc, setDoc, serverTimestamp, updateDoc,
 } from 'firebase/firestore'
 import { db } from '../firebase/firebaseConfig'
 import { useAuth } from '../contexts/AuthContext'
@@ -190,6 +190,12 @@ export default function Calendar() {
     loadMonth(year, month)
   }
 
+  // ── Edit task (from day detail) ──────────────────────────────────────────────
+  async function handleEditTask(taskId, updates) {
+    await updateDoc(doc(db, 'tasks', taskId), updates)
+    loadMonth(year, month)
+  }
+
   // ── Day click ───────────────────────────────────────────────────────────────
   function handleDayClick(dateStr) {
     setDetailDate(dateStr)
@@ -280,6 +286,7 @@ export default function Calendar() {
           onRemoveRest={handleRemoveRest}
           onAddTask={dateStr => { setDetailDate(null); setScheduleDate(dateStr) }}
           onDeleteTask={handleDeleteTask}
+          onEditTask={handleEditTask}
         />
       )}
 

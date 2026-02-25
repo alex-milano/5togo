@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Leaf, CalendarPlus, Trash2 } from 'lucide-react'
 import { fullDateLabel, STATUS_CONFIG } from '../utils/calendarUtils'
 import { todayStr } from '../utils/dateUtils'
+import EditTaskModal from './EditTaskModal'
 
 const REASONS = ['Recovery', 'Vacation', 'Weekend', 'Sick Day', 'Personal Day']
 const STARS   = { 1: '⭐', 2: '⭐⭐', 3: '⭐⭐⭐' }
@@ -18,6 +19,7 @@ export default function DayDetailModal({
   onRemoveRest,   // (dateStr) => void
   onAddTask,      // (dateStr) => void  — opens ScheduleTaskModal
   onDeleteTask,   // (taskId) => void
+  onEditTask,     // (task) => void  — opens EditTaskModal (future tasks)
 }) {
   const today  = todayStr()
   const isPast    = dateStr <  today
@@ -28,6 +30,8 @@ export default function DayDetailModal({
   const [showRestForm, setShowRestForm] = useState(false)
   const [reason,       setReason]       = useState(restReason || REASONS[0])
   const [confirmId,    setConfirmId]    = useState(null)
+  const [editingTask,  setEditingTask]  = useState(null)
+  const [savingEdit,   setSavingEdit]   = useState(false)
 
   const label = fullDateLabel(dateStr)
 
@@ -68,22 +72,29 @@ export default function DayDetailModal({
                 {t.mode === 'worker' && t.difficulty && (
                   <span className="ddm-task-stars">{STARS[t.difficulty] || '⭐'}</span>
                 )}
-                {/* Delete only for future tasks */}
+                {/* Edit and Delete for future tasks */}
                 {isFuture && (
-                  confirmId === t.id ? (
-                    <>
-                      <button className="msg-icon-btn delete-btn" onClick={() => { onDeleteTask(t.id); setConfirmId(null) }}>
-                        Confirm
+                  <>
+                    {onEditTask && (
+                      <button className="msg-icon-btn" onClick={() => setEditingTask(t)} title="Edit task">
+                        ✏️
                       </button>
-                      <button className="msg-icon-btn" onClick={() => setConfirmId(null)}>
-                        Cancel
+                    )}
+                    {confirmId === t.id ? (
+                      <>
+                        <button className="msg-icon-btn delete-btn" onClick={() => { onDeleteTask(t.id); setConfirmId(null) }}>
+                          Confirm
+                        </button>
+                        <button className="msg-icon-btn" onClick={() => setConfirmId(null)}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button className="msg-icon-btn delete-btn" onClick={() => setConfirmId(t.id)}>
+                        <Trash2 size={11} />
                       </button>
-                    </>
-                  ) : (
-                    <button className="msg-icon-btn delete-btn" onClick={() => setConfirmId(t.id)}>
-                      <Trash2 size={11} />
-                    </button>
-                  )
+                    )}
+                  </>
                 )}
               </div>
             ))}
@@ -142,6 +153,27 @@ export default function DayDetailModal({
             )
           )}
         </div>
+
+        {/* Edit Task Modal (for future tasks) */}
+        {editingTask && (
+          <EditTaskModal
+            task={editingTask}
+            isOpen={!!editingTask}
+            onClose={() => setEditingTask(null)}
+            onSave={async (taskId, updates) => {
+              setSavingEdit(true)
+              try {
+                if (onEditTask) {
+                  await onEditTask(taskId, updates)
+                }
+                setEditingTask(null)
+              } finally {
+                setSavingEdit(false)
+              }
+            }}
+            saving={savingEdit}
+          />
+        )}
 
         <button className="modal-close-full-btn" onClick={onClose}>Close</button>
       </div>

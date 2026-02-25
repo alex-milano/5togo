@@ -53,15 +53,15 @@ export function getDayStatus({ score, hasAnyTasks, isRestDay, isFuture, hasFutur
   if (isRestDay)   return 'rest'
   if (isFuture)    return hasFutureTasks ? 'planned' : 'future'
   if (isToday) {
-    if (score >= 10) return 'peak'
-    if (score >= 7)  return 'solid'
-    if (score >= 4)  return 'good'
+    if (score >= 5) return 'peak'
+    if (score >= 4) return 'solid'
+    if (score >= 2) return 'good'
     return 'today'
   }
   // Past day
-  if (score >= 10) return 'peak'
-  if (score >= 7)  return 'solid'
-  if (score >= 4)  return 'good'
+  if (score >= 5) return 'peak'
+  if (score >= 4) return 'solid'
+  if (score >= 2) return 'good'
   if (score > 0 || hasAnyTasks) return 'off'
   return 'nodata'
 }
