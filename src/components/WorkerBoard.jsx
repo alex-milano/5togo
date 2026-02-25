@@ -10,6 +10,7 @@ const DIFF_LABEL = { 1: '⭐ Easy', 2: '⭐⭐ Med', 3: '⭐⭐⭐ Hard' }
 
 export default function WorkerBoard({
   tasks,               // Worker tasks not in ice
+  iceTasks,            // Worker ice tasks (4th column)
   activeWorkerCount,   // count for zone calc
   todayPoints,
   streak,
@@ -19,9 +20,13 @@ export default function WorkerBoard({
   onDragStart,
   onDragEnd,
   onAddTask,
+  currentUser,
+  userProfile,
+  onShare,
 }) {
   const { themeData } = useTheme()
   const cols = themeData.worker
+  const ice = themeData.ice || { name: 'Ice Bucket', sub: 'Frozen', icon: '🧊' }
 
   const [text, setText]         = useState('')
   const [difficulty, setDiff]   = useState(2)
@@ -153,9 +158,20 @@ export default function WorkerBoard({
               onMove={onMove} onDelete={onDelete}
               draggingId={draggingId}
               onDragStart={onDragStart} onDragEnd={onDragEnd}
+              currentUser={currentUser} userProfile={userProfile} onShare={onShare}
             />
           )
         })}
+        {/* 4th column: Ice */}
+        <KanbanColumn
+          title={ice.name} subtitle={ice.sub} icon={ice.icon}
+          status="ice" colorClass="col-ice"
+          tasks={tagFilter ? iceTasks.filter(t => (t.tags || []).includes(tagFilter)) : iceTasks}
+          onMove={onMove} onDelete={onDelete}
+          draggingId={draggingId}
+          onDragStart={onDragStart} onDragEnd={onDragEnd}
+          currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+        />
       </div>
 
       {/* ── Burnout modal ── */}

@@ -20,6 +20,9 @@ export default function KanbanColumn({
   draggingId,
   onDragStart,
   onDragEnd,
+  currentUser,
+  userProfile,
+  onShare,
 }) {
   const [isDragOver, setIsDragOver] = useState(false)
   const hint = EMPTY[status] || { icon: '📋', text: 'Empty' }
@@ -75,6 +78,9 @@ export default function KanbanColumn({
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
               isDragging={draggingId === task.id}
+              currentUser={currentUser}
+              userProfile={userProfile}
+              onShare={onShare}
             />
           ))
         )}

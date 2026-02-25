@@ -15,10 +15,20 @@ function shortDateLabel(dateStr) {
   return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`
 }
 
-export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEnd, isDragging }) {
+export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEnd, isDragging, currentUser, userProfile, onShare }) {
   const today    = todayStr()
   const isOld    = task.dateStr && task.dateStr < today
   const isFuture = task.dateStr && task.dateStr > today
+
+  // Permission logic
+  const myHandle   = userProfile?.handle || null
+  const myUid      = currentUser?.uid || null
+  const isOwner    = task.userId === myUid
+  const sharedWithMe = (task.sharedWith || []).includes(myHandle)
+  const isCollaborator = sharedWithMe && !isOwner
+  const canEdit    = isOwner || isCollaborator
+  const canDelete  = isOwner
+  const canShare   = isOwner
 
   let classes = `task-card m-${task.mode} s-${task.status}`
   if (isDragging) classes += ' is-dragging'
@@ -42,6 +52,15 @@ export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEn
       {/* Future date badge */}
       {isFuture && (
         <div className="task-future-badge">📅 {shortDateLabel(task.dateStr)}</div>
+      )}
+
+      {/* Shared badge */}
+      {task.isShared && (
+        <div className="task-shared-badge">
+          {isOwner
+            ? `🔗 Shared with ${(task.sharedWith || []).length} ${(task.sharedWith || []).length === 1 ? 'person' : 'people'}`
+            : `🔗 Shared by @${task.sharedBy}`}
+        </div>
       )}
 
       {/* Title */}
@@ -78,20 +97,25 @@ export default function TaskCard({ task, onMove, onDelete, onDragStart, onDragEn
         )}
 
         <div className="task-actions">
-          {FORWARD[task.status] && (
+          {canEdit && FORWARD[task.status] && (
             <button className="act fwd" onClick={() => onMove(task.id, FORWARD[task.status])}>
               {FWD_LBL[task.status]}
             </button>
           )}
-          {BACK[task.status] && (
+          {canEdit && BACK[task.status] && (
             <button className="act back" onClick={() => onMove(task.id, BACK[task.status])}>
               {BCK_LBL[task.status]}
             </button>
           )}
-          {(task.status === 'locked' || task.status === 'progress') && (
+          {canEdit && (task.status === 'locked' || task.status === 'progress') && (
             <button className="act ice" onClick={() => onMove(task.id, 'ice')}>🧊</button>
           )}
-          <button className="act del" onClick={() => onDelete(task.id)}>🗑</button>
+          {canShare && onShare && (
+            <button className="act share" onClick={() => onShare(task.id)}>🔗</button>
+          )}
+          {canDelete && (
+            <button className="act del" onClick={() => onDelete(task.id)}>🗑</button>
+          )}
         </div>
       </div>
     </div>

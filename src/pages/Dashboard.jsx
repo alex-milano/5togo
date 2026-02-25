@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   collection, query, where, onSnapshot,
   addDoc, updateDoc, deleteDoc, doc,
@@ -17,6 +17,7 @@ import ViewSelector from '../components/ViewSelector'
 import DailyMotivation from '../components/DailyMotivation'
 import UpcomingTasksSection from '../components/UpcomingTasksSection'
 import ScheduleTaskModal from '../components/ScheduleTaskModal'
+import ShareTaskModal from '../components/ShareTaskModal'
 import { todayStr, yesterdayStr, getWeekNumber, getDateNDaysAgo } from '../utils/dateUtils'
 import { calcPoints, getScoreLevel, getZone } from '../utils/balanceUtils'
 
@@ -24,11 +25,12 @@ const VIEW_KEY     = '5togo_viewMode'
 const REASONS      = ['Recovery', 'Vacation', 'Weekend', 'Sick Day', 'Personal Day']
 
 export default function Dashboard() {
-  const { currentUser } = useAuth()
+  const { currentUser, userProfile } = useAuth()
   const { themeData }   = useTheme()
 
   // ── Tasks (real-time) ──────────────────────────────────────────────────────
-  const [tasks, setTasks]         = useState([])
+  const [ownTasks, setOwnTasks]     = useState([])
+  const [sharedTasks, setSharedTasks] = useState([])
   const [streak, setStreak]       = useState(0)
   const [showSettings,  setShowSettings]  = useState(false)
   const [showPeakModal, setShowPeakModal] = useState(false)
@@ -39,6 +41,7 @@ export default function Dashboard() {
     () => localStorage.getItem(VIEW_KEY) || 'split'
   )
   const [draggingId,  setDraggingId]  = useState(null)
+  const [shareModalTask, setShareModalTask] = useState(null)
 
   // Rest day
   const [showRestModal,  setShowRestModal]  = useState(false)
@@ -58,7 +61,7 @@ export default function Dashboard() {
     localStorage.setItem(VIEW_KEY, mode)
   }
 
-  // ── Firestore listener ─────────────────────────────────────────────────────
+  // ── Firestore listeners: own + shared tasks ───────────────────────────────
   useEffect(() => {
     if (!currentUser) return
     const q = query(collection(db, 'tasks'), where('userId', '==', currentUser.uid))
@@ -69,9 +72,23 @@ export default function Dashboard() {
         if (b.status === 'touchdown' && a.status !== 'touchdown') return -1
         return (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0)
       })
-      setTasks(loaded)
+      setOwnTasks(loaded)
     })
   }, [currentUser])
+
+  useEffect(() => {
+    if (!currentUser || !userProfile?.handle) return
+    const q = query(collection(db, 'tasks'), where('sharedWithUids', 'array-contains', currentUser.uid))
+    return onSnapshot(q, snap => {
+      const loaded = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      loaded.sort((a, b) => {
+        if (a.status === 'touchdown' && b.status !== 'touchdown') return 1
+        if (b.status === 'touchdown' && a.status !== 'touchdown') return -1
+        return (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0)
+      })
+      setSharedTasks(loaded)
+    })
+  }, [currentUser, userProfile?.handle])
 
   // ── Load streak + check today's rest day ──────────────────────────────────
   useEffect(() => {
@@ -88,30 +105,42 @@ export default function Dashboard() {
     })
   }, [currentUser, today])
 
-  // ── Auto-freeze expired Worker tasks ───────────────────────────────────────
+  // ── Auto-freeze expired Worker tasks (only own tasks) ──────────────────────
   useEffect(() => {
-    if (!tasks.length || frozenRef.current) return
-    const toFreeze = tasks.filter(t =>
+    if (!ownTasks.length || frozenRef.current) return
+    const toFreeze = ownTasks.filter(t =>
       t.mode === 'worker' &&
       t.dateStr && t.dateStr < today &&
-      (t.status === 'locked' || t.status === 'progress')
+      (t.status === 'locked' || t.status === 'progress') &&
+      t.userId === currentUser.uid
     )
     if (toFreeze.length === 0) return
     frozenRef.current = true
     Promise.all(toFreeze.map(t => updateDoc(doc(db, 'tasks', t.id), { status: 'ice' })))
       .finally(() => setTimeout(() => { frozenRef.current = false }, 5000))
-  }, [tasks, today])
+  }, [ownTasks, today, currentUser?.uid])
+
+  // ── Merge own + shared tasks (own take precedence) ─────────────────────────
+  const tasks = useMemo(() => {
+    const map = {}
+    // Add shared tasks first
+    sharedTasks.forEach(t => { map[t.id] = t })
+    // Own tasks override shared
+    ownTasks.forEach(t => { map[t.id] = t })
+    return Object.values(map)
+  }, [ownTasks, sharedTasks])
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const workerTasks       = tasks.filter(t => t.mode === 'worker' && t.status !== 'ice')
   const lifeTasks         = tasks.filter(t => t.mode === 'life'   && t.status !== 'ice')
-  const iceTasks          = tasks.filter(t => t.status === 'ice')
+  const workerIceTasks    = tasks.filter(t => t.mode === 'worker' && t.status === 'ice')
+  const lifeIceTasks      = tasks.filter(t => t.mode === 'life'   && t.status === 'ice')
 
   // Future tasks (dateStr > today, not ice)
   const futureTasks = tasks.filter(t => t.dateStr > today && t.status !== 'ice' && t.status !== 'touchdown')
 
   const todayWorker       = tasks.filter(t => t.mode === 'worker' && t.dateStr === today)
-  const activeWorkerCount = todayWorker.filter(t => t.status !== 'ice').length
+  const activeWorkerCount = todayWorker.filter(t => t.status !== 'ice' && t.userId === currentUser?.uid).length
   const completedWorker   = todayWorker.filter(t => t.status === 'touchdown')
   const todayPoints       = calcPoints(completedWorker)
 
@@ -260,6 +289,12 @@ export default function Dashboard() {
     setTodayIsRest(false)
   }
 
+  // ── Share task callback ───────────────────────────────────────────────────
+  const handleShare = useCallback((taskId) => {
+    const task = tasks.find(t => t.id === taskId)
+    if (task) setShareModalTask(task)
+  }, [tasks])
+
   // ── Keyboard ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const h = e => {
@@ -268,6 +303,7 @@ export default function Dashboard() {
         setShowSettings(false)
         setShowRestModal(false)
         setScheduleOpen(false)
+        setShareModalTask(null)
       }
     }
     window.addEventListener('keydown', h)
@@ -341,11 +377,12 @@ export default function Dashboard() {
       )}
 
       {/* ── Dual board ── */}
-      <div className="dual-board">
+      <div className={`dual-board ${viewMode === 'split' ? 'split-mode' : ''}`}>
         {showWorker && (
           <div className={`worker-panel ${mobileView === 'worker' ? 'mobile-visible' : 'mobile-hidden'}`}>
             <WorkerBoard
               tasks={workerTasks}
+              iceTasks={workerIceTasks}
               activeWorkerCount={activeWorkerCount}
               todayPoints={todayPoints}
               streak={streak}
@@ -355,16 +392,18 @@ export default function Dashboard() {
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onAddTask={handleAddTask}
+              currentUser={currentUser}
+              userProfile={userProfile}
+              onShare={handleShare}
             />
           </div>
         )}
-
-        {showDivider && <div className="board-divider" />}
 
         {showLife && (
           <div className={`life-panel ${mobileView === 'life' ? 'mobile-visible' : 'mobile-hidden'}`}>
             <LifeBoard
               tasks={lifeTasks}
+              iceTasks={lifeIceTasks}
               completedToday={todayLife.length}
               draggingId={draggingId}
               onMove={handleMove}
@@ -372,30 +411,12 @@ export default function Dashboard() {
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onAddTask={handleAddTask}
+              currentUser={currentUser}
+              userProfile={userProfile}
+              onShare={handleShare}
             />
           </div>
         )}
-      </div>
-
-      {/* ── Ice Bucket ── */}
-      <div className="ice-section">
-        <div className="ice-section-header">
-          <span className="ice-section-title">{ice.icon} {ice.name}</span>
-          <span className="ice-section-sub">{ice.sub} · {iceTasks.length} tasks</span>
-        </div>
-        <div className="ice-cols">
-          <KanbanColumn
-            title={ice.name} subtitle={ice.sub} icon={ice.icon}
-            status="ice"
-            colorClass="col-ice"
-            tasks={iceTasks}
-            onMove={handleMove}
-            onDelete={handleDelete}
-            draggingId={draggingId}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          />
-        </div>
       </div>
 
       {/* ── Upcoming scheduled tasks ── */}
@@ -456,6 +477,16 @@ export default function Dashboard() {
           initialDate={null}
           onSchedule={handleSchedule}
           onClose={() => setScheduleOpen(false)}
+        />
+      )}
+
+      {/* ── Share Task modal ── */}
+      {shareModalTask && (
+        <ShareTaskModal
+          task={shareModalTask}
+          currentUser={currentUser}
+          userProfile={userProfile}
+          onClose={() => setShareModalTask(null)}
         />
       )}
 

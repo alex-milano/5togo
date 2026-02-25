@@ -6,6 +6,7 @@ import { getTagColor } from '../utils/balanceUtils'
 
 export default function LifeBoard({
   tasks,             // Life tasks not in ice
+  iceTasks,          // Life ice tasks (4th column)
   completedToday,    // count of done life tasks today
   draggingId,
   onMove,
@@ -13,9 +14,13 @@ export default function LifeBoard({
   onDragStart,
   onDragEnd,
   onAddTask,
+  currentUser,
+  userProfile,
+  onShare,
 }) {
   const { themeData } = useTheme()
   const cols = themeData.life
+  const ice = themeData.ice || { name: 'Ice Bucket', sub: 'Frozen', icon: '🧊' }
 
   const [text, setText]           = useState('')
   const [tags, setTags]           = useState([])
@@ -106,9 +111,20 @@ export default function LifeBoard({
               onMove={onMove} onDelete={onDelete}
               draggingId={draggingId}
               onDragStart={onDragStart} onDragEnd={onDragEnd}
+              currentUser={currentUser} userProfile={userProfile} onShare={onShare}
             />
           )
         })}
+        {/* 4th column: Ice */}
+        <KanbanColumn
+          title={ice.name} subtitle={ice.sub} icon={ice.icon}
+          status="ice" colorClass="col-life-ice"
+          tasks={tagFilter ? iceTasks.filter(t => (t.tags || []).includes(tagFilter)) : iceTasks}
+          onMove={onMove} onDelete={onDelete}
+          draggingId={draggingId}
+          onDragStart={onDragStart} onDragEnd={onDragEnd}
+          currentUser={currentUser} userProfile={userProfile} onShare={onShare}
+        />
       </div>
     </div>
   )

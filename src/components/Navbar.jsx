@@ -3,6 +3,7 @@ import { LogOut, Settings as SettingsIcon, Shield, BarChart2, CalendarDays, User
 import { useAuth } from '../contexts/AuthContext'
 import { getScoreLevel, ZONES } from '../utils/balanceUtils'
 import ThemeToggle from './ThemeToggle'
+import NotificationBell from './NotificationBell'
 
 export default function Navbar({ todayPoints = 0, streak = 0, zone = 'empty', onOpenSettings }) {
   const { currentUser, userRole, userProfile, logout } = useAuth()
@@ -45,6 +46,7 @@ export default function Navbar({ todayPoints = 0, streak = 0, zone = 'empty', on
 
       <div className="navbar-right">
         <ThemeToggle />
+        <NotificationBell currentUser={currentUser} />
         {userProfile?.handle && (
           <Link to={`/profile/${userProfile.handle}`} className="nav-btn">
             <User size={14} /> Profile
